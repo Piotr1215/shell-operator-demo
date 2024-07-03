@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-operator
+  namespace: default
+spec:
+  containers:
+    - name: shell-operator
+      image: piotrzan/shell-operator:monitor-pods11
+      imagePullPolicy: Always
+  serviceAccountName: monitor-pods-acc
