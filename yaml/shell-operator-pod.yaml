@@ -6,6 +6,6 @@ metadata:
 spec:
   containers:
     - name: shell-operator
-      image: piotrzan/shell-operator:monitor-pods11
+      image: piotrzan/shell-operator:pods-hooks.v1
       imagePullPolicy: Always
   serviceAccountName: monitor-pods-acc
