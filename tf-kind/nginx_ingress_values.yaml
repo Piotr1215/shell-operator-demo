@@ -1,0 +1,21 @@
+
+controller:
+  hostPort:
+    enabled: true
+  terminationGracePeriodSeconds: 0
+  service:
+    type: "NodePort"
+  watchIngressWithoutClass: true
+  nodeSelector:
+    ingress-ready: "true"
+  tolerations:
+  - effect: "NoSchedule"
+    key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+  - effect: "NoSchedule"
+    key: "node-role.kubernetes.io/control-plane"
+    operator: "Equal"
+  publishService:
+    enabled: false
+  extraArgs:
+    publish-status-address: "localhost"

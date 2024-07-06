@@ -1,0 +1,10 @@
+apiVersion: http.crossplane.io/v1alpha2
+kind: DisposableRequest
+metadata:
+  name: slack-webhook
+spec:
+  deletionPolicy: Orphan
+  forProvider:
+    url: $WEBHOOK_URL
+    method: POST
+    body: '{ "channel": "#app-notify", "username": "webhookbot", "text": "The app is deployed to: http://localhost and observability http://localhost:32000/d/k8s_views_ns_devops/devops-team-kubernetes-views-namespaces?orgId=1&refresh=30s&var-datasource=prometheus&var-cluster=&var-namespace=devops-team&var-resolution=30s&var-created_by=All", "icon_emoji": ":ghost:" }'
