@@ -39,7 +39,7 @@ Our objective is to implement a system that:
 - ☁️ Infrastructure as Code for multiple clouds
 - 📦 Extends Kubernetes with custom resources
 - 🔌 Provides a consistent API for cloud services
-- 🚀 Enables GitOps for infrastructure
+- 🚀 Enables building custom control planes
 
 ---
 
@@ -57,7 +57,7 @@ Our objective is to implement a system that:
 - 🐳 Runs Kubernetes clusters using Docker containers
 - 🚀 Perfect for local development and testing
 - 🔧 Easily configurable and reproducible
-- 💻 Lightweight alternative to full-scale clusters
+- 💻 Lightweight alternative to full-scale clusters for local testing
 
 ---
 
@@ -65,7 +65,10 @@ Our objective is to implement a system that:
 
 Let's start by setting up our Kind cluster with Crossplane:
 
-This command will:
+```bash
+__show_file_temp_pane.sh ./justfile
+```
+
 1. Set up a `KIND` cluster using `terraform`
 2. Install `Crossplane` with required providers
 3. Create necessary providers (http and kubernetes provider)
@@ -76,56 +79,20 @@ This command will:
 
 Let's look at our hook scripts for monitoring pod creation and deletion:
 
-Pod Creation Hook:
+Let's see the pod Creation Hook:
 
 ```bash
-#!/usr/bin/env bash
-# Hook configuration
-if [[ $1 == "--config" ]]; then
-  cat <<EOF
-configVersion: v1
-kubernetes:
-- apiVersion: v1
-  kind: Pod
-  executeHookOnEvent: ["Added"]
-EOF
-else
-  # Webhook logic for pod creation
-  WEBHOOK_URL=$(kubectl get secret webhook-secret -n default -o jsonpath="{.data.webhook-url}" | base64 --decode)
-  
-  for i in $(seq 0 $(($(jq length $BINDING_CONTEXT_PATH) - 1))); do
-    podName=$(jq -r .[$i].object.metadata.name $BINDING_CONTEXT_PATH)
-    # ... 
-  done
-fi
+__show_file_temp_pane.sh ./hooks/pods-create-call-slack.sh
 ```
 
 ---
 
 ## Shell Operator: Pod Watcher Scripts on Deletion
 
-Pod Deletion Hook:
+Let's see the pod Deletion Hook:
 
 ```bash
-#!/usr/bin/env bash
-# Hook configuration
-if [[ $1 == "--config" ]]; then
-  cat <<EOF
-configVersion: v1
-kubernetes:
-- apiVersion: v1
-  kind: Pod
-  executeHookOnEvent: ["Deleted"]
-EOF
-else
-  # Webhook logic for pod deletion
-  WEBHOOK_URL=$(kubectl get secret webhook-secret -n default -o jsonpath="{.data.webhook-url}" | base64 --decode)
-  
-  for i in $(seq 0 $(($(jq length $BINDING_CONTEXT_PATH) - 1))); do
-    podName=$(jq -r .[$i].object.metadata.name $BINDING_CONTEXT_PATH)
-    # ... 
-  done
-fi
+__show_file_temp_pane.sh ./hooks/pods-delete-call-slack.sh
 ```
 
 ---
@@ -150,6 +117,10 @@ spec:
       "text": "...",
       "icon_emoji": ":ghost:"
     }'
+```
+
+```bash
+__show_file_temp_pane.sh ./yaml/http-request.yaml
 ```
 
 ---
@@ -183,27 +154,10 @@ Make sure you're logged in to your container registry first!
 ## RBAC Rules for Shell Operator
 
 Key permissions:
-- List, watch, and get pods in all namespaces
-- Access to events for logging
+- Pods, secrets, http provider CRDs in all namespaces
  
-```yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: monitor-pods-acc
-  namespace: default 
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: pod-manager-clusterrole
-rules:
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "list", "watch"]
+```bash
+__show_file_temp_pane.sh ./yaml/rbac.yaml
 ```
 
 ---
@@ -236,6 +190,17 @@ just setup_shell_operator
 
 ---
 
+## Check Slack for creation notification
+
+Let's see if notifications will work as expected:
+
+```bash
+/home/decoder/dev/dotfiles/scripts/__layouts.sh 2
+xdg-open https://app.slack.com/client/TS5R3QA6N/C072HULDL80
+```
+
+---
+
 ## Demo Time: Pod Monitoring in Action
 
 Let's create and delete some pods to see our Shell Operator in action!
@@ -243,23 +208,14 @@ Let's create and delete some pods to see our Shell Operator in action!
 1. Create a test pod:
 
 ```bash
-kubectl run test-pod --image=nginx
+kubectl run test-pod-nginx --image=nginx
 ```
 
 ---
-
-## Check Slack for creation notification
-
-```bash
-xdg-open https://app.slack.com/client/TS5R3QA6N/C072HULDL80
-```
-
----
-
 ## Delete the test pod:
 
 ```bash
-kubectl delete pod test-pod
+kubectl delete pod test-pod-nginx
 ```
 
 ---
@@ -270,4 +226,3 @@ kubectl delete pod test-pod
 - 🔗 Crossplane and Terraform provide robust infrastructure management
 - 🚀 Kind offers a great local development environment
 - 🔔 Real-time notifications enhance cluster observability
-
